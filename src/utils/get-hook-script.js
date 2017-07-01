@@ -96,20 +96,25 @@ module.exports = function getHookScript(hookName, relativePath, npmScriptName) {
 
     stripIndent(
       `
-      # Check that npm exists
+      # Check that npm or yarn exist
+      PM="npm"
       command_exists npm || {
-        echo >&2 "husky > can't find npm in PATH, skipping ${npmScriptName} script in package.json"
-        exit 0
+        if command_exists yarn; then
+          PM="yarn"
+        else
+          echo >&2 "husky > can't find npm or yarn in PATH, skipping ${npmScriptName} script in package.json"
+          exit 0
+        fi
       }
 
       # Export Git hook params
       export GIT_PARAMS="$*"
 
-      # Run npm script
-      echo "husky > npm run -s ${npmScriptName} (node \`node -v\`)"
+      # Run script
+      echo "husky > $PM run -s ${npmScriptName} (node \`node -v\`)"
       echo
 
-      npm run -s ${npmScriptName} || {
+      $PM run -s ${npmScriptName} || {
         echo
         echo "husky > ${hookName} hook failed ${noVerifyMessage}"
         exit 1
